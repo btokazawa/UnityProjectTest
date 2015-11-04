@@ -1,55 +1,55 @@
 ﻿Shader "Custom/GroundShader" {
     Properties {
-        _HogeTex( "Base", 2D ) = "white" {}
+		_MainTex ("Base", 2D) = "white" {}
     }
 
     SubShader {
         Tags {
             "Queue" = "Transparent"
+			"IgnoreProjector"="True" 
+			"RenderType"="Transparent" 
         }
 
         // First Pass
-        Cull Front
-
-        CGPROGRAM
-
-        #pragma surface surf Lambert alpha
-
-        sampler2D _HogeTex;
-
-        struct Input {
-            float2 uv_HogeTex;
-            float4 vtxColor : COLOR;
-        };
-
-        void surf( Input IN, inout SurfaceOutput o ) {
-            half4 color = tex2D( _HogeTex, IN.uv_HogeTex );
-            o.Albedo = color.rgb;
-            o.Alpha = color.a;
-		}
-
-        ENDCG
-
-        // Second Pass
-        Cull Back
-
+        Cull Off
+		Blend SrcAlpha OneMinusSrcAlpha
+		
+		Pass{
 		CGPROGRAM
 
-        #pragma surface surf Lambert alpha
+			#pragma vertex vert
+			#pragma fragment frag
 
-        sampler2D _HogeTex;
+			sampler2D _MainTex;
 
-        struct Input {
-            float2 uv_HogeTex;
-            float4 vtxColor : COLOR;
-        };
+			struct appdata_t {
+			
+				float4 vertex   : POSITION;
+				float2 texcoord : TEXCOORD0;
+			};
+			struct v2f {
+			
+				float4 vertex   : SV_POSITION;
+				half2  texcoord : TEXCOORD0;
+			};
 
-        void surf( Input IN, inout SurfaceOutput o ) {
-            half4 color = tex2D( _HogeTex, IN.uv_HogeTex );
-            o.Albedo = color.rgb;
-            o.Alpha = color.a;
+			v2f vert(appdata_t IN) {
+
+				v2f OUT;
+
+				// 頂点計算.
+				OUT.vertex    = mul(UNITY_MATRIX_MVP, IN.vertex);
+				OUT.texcoord =  IN.texcoord;
+
+				return OUT;
+			}
+
+			fixed4 frag(v2f IN) : SV_Target {
+
+				return tex2D(_MainTex, IN.texcoord);
+			}
+
+		ENDCG
 		}
-
-        ENDCG
     }
 }
